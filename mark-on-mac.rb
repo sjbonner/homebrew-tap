@@ -1,4 +1,5 @@
-class MarkOnMac < Formula  desc ""
+class MarkOnMac < Formula
+  desc "Command-line version of Dr. Gary White's mark-recapture software"
   homepage "http://warnercnr.colostate.edu/~gwhite/mark/mark.htm"
   url "https://github.com/sjbonner/mark-on-mac/archive/0.0.1.tar.gz"
   version "0.0.1"
