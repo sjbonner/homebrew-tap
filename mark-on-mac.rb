@@ -1,8 +1,8 @@
 class MarkOnMac < Formula
   desc "Command-line version of Dr. Gary White's mark-recapture software"
   homepage "http://warnercnr.colostate.edu/~gwhite/mark/mark.htm"
-  url "https://github.com/sjbonner/mark-on-mac/archive/refs/tags/v10.1.3.tar.gz"
-  sha256 "8b9fc638fba2068b8046f1b067bb51826a3d8b0910d604e28b7df033c2403623"
+  url "https://github.com/sjbonner/mark-on-mac/archive/refs/tags/v11.1.1.tar.gz"
+  sha256 "25eea4a0ca00cb78e9ad03b082c06fda1eafc0438ca3fb1ef7370d7f428bbbc5"
  
   def install
     bin.install "mark"
