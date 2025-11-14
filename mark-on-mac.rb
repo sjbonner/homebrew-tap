@@ -6,7 +6,6 @@ class MarkOnMac < Formula
   
   def install
     bin.install "mark"
-    bin.install "mark.64.OSX"
   end
 
 end
