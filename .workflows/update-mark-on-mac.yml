@@ -1,0 +1,79 @@
+name: Update mark-on-mac formula
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  FORMULA: mark-on-mac.rb
+  UPSTREAM: sjbonner/mark-on-mac
+
+jobs:
+  update:
+    runs-on: macos-latest
+    outputs:
+      updated: ${{ steps.check.outputs.updated }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for new release
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # /releases/latest ignores drafts and pre-releases
+          latest_tag=$(gh api "repos/$UPSTREAM/releases/latest" --jq .tag_name || true)
+          if [ -z "$latest_tag" ]; then
+            echo "No stable release found"; echo "updated=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          latest="${latest_tag#v}"
+          current=$(sed -nE 's#.*/tags/v([0-9.]+)\.tar\.gz".*#\1#p' "$FORMULA")
+          echo "current=$current latest=$latest"
+          if [ "$current" = "$latest" ]; then
+            echo "updated=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          url="https://github.com/$UPSTREAM/archive/refs/tags/${latest_tag}.tar.gz"
+          sha=$(curl -fsSL "$url" | shasum -a 256 | cut -d' ' -f1)
+          sed -i '' -E "s#(url \").*(\")#\1${url}\2#" "$FORMULA"
+          sed -i '' -E "s#(sha256 \").*(\")#\1${sha}\2#" "$FORMULA"
+          echo "updated=true" >> "$GITHUB_OUTPUT"
+          echo "version=$latest" >> "$GITHUB_OUTPUT"
+
+      - name: Show formula diff
+        run: git diff
+
+      - name: Install tap from checkout
+        run: |
+          brew tap sjbonner/tap "$GITHUB_WORKSPACE"
+          cp "$FORMULA" "$(brew --repository sjbonner/tap)/$FORMULA"
+
+      - name: Install formula
+        run: brew install --build-from-source sjbonner/tap/mark-on-mac
+
+      - name: Test installed binary
+        run: |
+          test -x "$(brew --prefix)/bin/mark"
+          brew test sjbonner/tap/mark-on-mac || true
+
+      - name: Audit formula
+        run: brew audit --formula sjbonner/tap/mark-on-mac || true
+
+      - name: Open pull request
+        if: steps.check.outputs.updated == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          v="${{ steps.check.outputs.version }}"
+          branch="update-mark-on-mac-$v"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add "$FORMULA"
+          git commit -m "mark-on-mac $v"
+          git push origin "$branch"
+          gh pr create --title "mark-on-mac $v" \
+            --body "Automated update to mark-on-mac v$v. Formula installed and tested on macOS." \
+            --base "${{ github.event.repository.default_branch }}"
