@@ -17,7 +17,7 @@ jobs:
     outputs:
       updated: ${{ steps.check.outputs.updated }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Check for new release
         id: check
@@ -53,10 +53,16 @@ jobs:
       - name: Install formula
         run: brew install --build-from-source sjbonner/tap/mark-on-mac
 
-      - name: Test installed binary
+      - name: Capture mark version output
         run: |
-          test -x "$(brew --prefix)/bin/mark"
-          brew test sjbonner/tap/mark-on-mac || true
+          mkdir -p artifacts
+          mark -v > artifacts/mark-version.txt
+
+      - name: Upload mark version artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: mark-version-output
+          path: artifacts/mark-version.txt
 
       - name: Audit formula
         run: brew audit --formula sjbonner/tap/mark-on-mac || true
