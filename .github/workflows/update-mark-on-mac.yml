@@ -17,7 +17,7 @@ jobs:
     outputs:
       updated: ${{ steps.check.outputs.updated }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Check for new release
         id: check
@@ -59,7 +59,7 @@ jobs:
           mark -v > artifacts/mark-version.txt
 
       - name: Upload mark version artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: mark-version-output
           path: artifacts/mark-version.txt
